@@ -49,5 +49,4 @@ pub mod prelude {
     pub use embassy_time::{Duration, Timer};
 
     pub use log::{debug, error, info, trace, warn};
-
 }

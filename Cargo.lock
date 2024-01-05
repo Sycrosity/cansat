@@ -150,6 +150,7 @@ dependencies = [
  "heapless 0.8.0",
  "log",
  "mpu6050",
+ "nalgebra 0.32.3",
  "shared-bus",
  "ssd1306",
  "static_cell",
@@ -932,12 +933,11 @@ dependencies = [
 [[package]]
 name = "mpu6050"
 version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abd67852b244bcca82aa14dd89d50795c065fa598e435c0fe2724663f6e3b9f2"
+source = "git+https://github.com/Sycrosity/mpu6050#688d90c08947555a7a95b7659deb8019f3df49ed"
 dependencies = [
  "embedded-hal 0.2.7",
  "libm",
- "nalgebra 0.31.4",
+ "nalgebra 0.32.3",
 ]
 
 [[package]]
@@ -956,21 +956,21 @@ dependencies = [
  "num-complex",
  "num-rational",
  "num-traits",
- "simba",
+ "simba 0.7.3",
  "typenum",
 ]
 
 [[package]]
 name = "nalgebra"
-version = "0.31.4"
+version = "0.32.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20bd243ab3dbb395b39ee730402d2e5405e448c75133ec49cc977762c4cba3d1"
+checksum = "307ed9b18cc2423f29e83f84fd23a8e73628727990181f18641a8b5dc2ab1caa"
 dependencies = [
  "approx",
  "num-complex",
  "num-rational",
  "num-traits",
- "simba",
+ "simba 0.8.1",
  "typenum",
 ]
 
@@ -1215,6 +1215,18 @@ name = "simba"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f3fd720c48c53cace224ae62bef1bbff363a70c68c4802a78b5cc6159618176"
+dependencies = [
+ "approx",
+ "num-complex",
+ "num-traits",
+ "paste",
+]
+
+[[package]]
+name = "simba"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "061507c94fc6ab4ba1c9a0305018408e312e17c041eb63bef8aa726fa33aceae"
 dependencies = [
  "approx",
  "num-complex",

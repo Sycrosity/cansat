@@ -9,9 +9,9 @@ pub async fn blink(mut led: AnyPin<Output<PushPull>>) {
         on = !on;
 
         if on {
-            trace!("ON!")
+            info!("ON!")
         } else {
-            trace!("OFF!")
+            info!("OFF!")
         }
         Timer::after(Duration::from_millis(1000)).await;
     }

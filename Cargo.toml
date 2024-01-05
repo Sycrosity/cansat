@@ -31,8 +31,9 @@ embassy-time = { version = "0.2.0", features = ["log"] }
 embassy-sync = { version = "0.5.0", features = ["log"] }
 embassy-net = { version = "0.3.0", features = ["log"], optional = true }
 
-mpu6050 = "0.1.6"
+mpu6050 = { version = "0.1.6", git = "https://github.com/Sycrosity/mpu6050" }
 shared-bus = { version = "0.3.1", features = ["xtensa"] }
+nalgebra = { version = "0.32.3", default-features = false }
 
 [features]
 alloc = ["dep:esp-alloc"]

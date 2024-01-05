@@ -4,12 +4,11 @@
 
 use cansat::{
     blink::blink,
-    display::{screen_counter, Display, display_numerical_data},
-    mpu6050::get_sensor_data,
+    display::{display_numerical_data, Display},
+    mpu6050::mpu6050_stream,
     prelude::*,
 };
 
-// use embassy_sync::signal::Signal;
 use embassy_time::Ticker;
 use hal::{
     clock::ClockControl,
@@ -23,8 +22,6 @@ use embassy_executor::Spawner;
 use esp_println::println;
 
 // use esp_wifi::{initialize, EspWifiInitFor};
-
-static mut signal = 
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -71,15 +68,13 @@ async fn main(spawner: Spawner) -> ! {
 
     let mpu = mpu6050::Mpu6050::new(shared_i2c.acquire_i2c());
 
-
-    // let mpu_data_signal = &*make_static!(Signal::new());
-    
+    // let mpu_data_signal = SIGNAL;
 
     spawner.spawn(blink(led.degrade())).unwrap();
     // spawner.spawn(screen_counter(display)).unwrap();
     spawner.spawn(display_numerical_data(display)).unwrap();
 
-    spawner.spawn(get_sensor_data(mpu)).unwrap();
+    spawner.spawn(mpu6050_stream(mpu)).unwrap();
 
     let mut ticker = Ticker::every(Duration::from_secs(10));
 
