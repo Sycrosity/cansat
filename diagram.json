@@ -1,34 +1,47 @@
 {
-    "version": 1,
-    "editor": "wokwi",
-    "author": "Sycrosity <72102935+Sycrosity@users.noreply.github.com>",
-    "parts": [
-        {
-            "type": "board-esp32-devkit-c-v4",
-            "id": "esp",
-            "top": 0.59,
-            "left": 0.67,
-            "attrs": {
-                "flashSize": "16"
-            }
-        }
-    ],
-    "connections": [
-        [
-            "esp:TX",
-            "$serialMonitor:RX",
-            "",
-            []
-        ],
-        [
-            "esp:RX",
-            "$serialMonitor:TX",
-            "",
-            []
-        ]
-    ],
-    "serialMonitor": {
-        "display": "terminal",
-        "convertEol": true
+  "version": 1,
+  "editor": "wokwi",
+  "author": "Sycrosity <72102935+Sycrosity@users.noreply.github.com>",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {
+        "flashSize": "16"
+      }
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled1",
+      "top": 264.52,
+      "left": 96.91,
+      "attrs": { "i2cAddress": "0x3c" }
+    },
+    {
+      "type": "wokwi-mpu6050",
+      "id": "mpu1",
+
+      "top": -73.66,
+      "left": 153.83,
+      "attrs": {}
     }
+  ],
+  "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []],
+    ["esp:22", "oled1:SCL", "yellow", ["h0"]],
+    ["esp:21", "oled1:SDA", "orange", ["h0"]],
+    ["esp:GND.1", "oled1:GND", "black", ["v-10.59", "h-40.53", "v87.42"]],
+    ["esp:3V3", "oled1:VCC", "red", ["v-20.97", "h-58.16", "v94.34"]],
+    ["esp:22","mpu1:SCL", "yellow", []],
+    ["esp:21","mpu1:SDA", "orange", []],
+    [ "esp:3.3V", "mpu1:VCC", "red", [ "v27", "h29" ] ],
+    [ "esp:GND.1", "mpu1:GND", "black", [ "v25", "h66" ] ]
+  ],
+  "serialMonitor": {
+    "display": "terminal",
+    "convertEol": true
+  }
 }

@@ -2,42 +2,34 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-mod blink;
-mod display;
+use cansat::{
+    blink::blink,
+    display::{screen_counter, Display, display_numerical_data},
+    mpu6050::get_sensor_data,
+    prelude::*,
+};
 
-extern crate alloc;
-use core::mem::MaybeUninit;
-
-use cansat::prelude::*;
-
-use hal::{clock::ClockControl, i2c::*, peripherals::Peripherals, timer::TimerGroup, IO};
+// use embassy_sync::signal::Signal;
+use embassy_time::Ticker;
+use hal::{
+    clock::ClockControl,
+    i2c::*,
+    peripherals::{Peripherals, I2C0},
+    timer::TimerGroup,
+    IO,
+};
 
 use embassy_executor::Spawner;
+use esp_println::println;
 
 // use esp_wifi::{initialize, EspWifiInitFor};
 
-use crate::{
-    blink::blink,
-    display::{screen_counter, Display},
-};
-
-#[global_allocator]
-static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
-
-fn init_heap() {
-    const HEAP_SIZE: usize = 32 * 1024;
-    static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
-
-    unsafe {
-        ALLOCATOR.init(HEAP.as_mut_ptr() as *mut u8, HEAP_SIZE);
-    }
-}
-
-// type Display = ssd1306::Ssd1306<I2CInterface<I2C<'static, I2C0>>, DisplaySize128x64, TerminalMode>;
+static mut signal = 
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
-    // init_heap();
+    #[cfg(feature = "alloc")]
+    init_heap();
 
     let peripherals = Peripherals::take();
     let system = peripherals.SYSTEM.split();
@@ -50,11 +42,10 @@ async fn main(spawner: Spawner) -> ! {
 
     embassy::init(&clocks, timer_group0.timer0);
 
-    // setup logger
     // To change the log_level change the env section in .cargo/config.toml or remove it and set ESP_LOGLEVEL manually before running cargo run this requires a clean rebuild because of https://github.com/rust-lang/cargo/issues/10358
 
     esp_println::logger::init_logger_from_env();
-    log::info!("Logger is setup");
+    info!("Logger is setup");
     println!("Hello world!");
 
     // let _wifi_init = initialize(
@@ -73,15 +64,27 @@ async fn main(spawner: Spawner) -> ! {
 
     let i2c = I2C::new(peripherals.I2C0, sda, scl, 400u32.kHz(), &clocks);
 
-    let display = Display::new(i2c, ssd1306::size::DisplaySize128x64);
+    //we must share the i2c bus between the two, as otherwise the functions want to "own" the i2c bus themselves
+    let shared_i2c = shared_bus::new_xtensa!(I2C<'static,I2C0> = i2c).unwrap();
+
+    let display = Display::new(shared_i2c.acquire_i2c(), ssd1306::size::DisplaySize128x64);
+
+    let mpu = mpu6050::Mpu6050::new(shared_i2c.acquire_i2c());
+
+
+    // let mpu_data_signal = &*make_static!(Signal::new());
+    
 
     spawner.spawn(blink(led.degrade())).unwrap();
-    spawner.spawn(screen_counter(display)).unwrap();
+    // spawner.spawn(screen_counter(display)).unwrap();
+    spawner.spawn(display_numerical_data(display)).unwrap();
 
-    let _button = io.pins.gpio15.into_pull_up_input();
+    spawner.spawn(get_sensor_data(mpu)).unwrap();
+
+    let mut ticker = Ticker::every(Duration::from_secs(10));
 
     loop {
-        // let _ = button.wait_for_low().await;
-        Timer::after_millis(10_000).await;
+        trace!("KeepAlive tick");
+        ticker.next().await;
     }
 }

@@ -1,4 +1,4 @@
-use cansat::prelude::*;
+use crate::prelude::*;
 
 #[task]
 pub async fn blink(mut led: AnyPin<Output<PushPull>>) {
@@ -9,10 +9,10 @@ pub async fn blink(mut led: AnyPin<Output<PushPull>>) {
         on = !on;
 
         if on {
-            info!("ON!")
+            trace!("ON!")
         } else {
-            info!("OFF!")
+            trace!("OFF!")
         }
-        Timer::after(Duration::from_millis(500)).await;
+        Timer::after(Duration::from_millis(1000)).await;
     }
 }

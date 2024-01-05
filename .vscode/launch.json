@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "Wokwi GDB",
-      "type": "cppdbg",
+      "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/target/xtensa-esp32-none-elf/debug/cansat",
+      "program": "${workspaceFolder}/target/xtensa-esp32-none-elf/release/cansat",
       "cwd": "${workspaceFolder}",
       "MIMode": "gdb",
       "miDebuggerPath": "${userHome}/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb",
