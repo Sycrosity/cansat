@@ -64,7 +64,9 @@ async fn main(spawner: Spawner) -> ! {
     //we must share the i2c bus between the two, as otherwise the functions want to "own" the i2c bus themselves
     let shared_i2c = shared_bus::new_xtensa!(I2C<'static,I2C0> = i2c).unwrap();
 
-    let display = Display::new(shared_i2c.acquire_i2c(), ssd1306::size::DisplaySize128x64);
+    let display = Display::new(shared_i2c.acquire_i2c(), ssd1306::size::DisplaySize128x64)
+        .await
+        .unwrap();
 
     let mpu = mpu6050::Mpu6050::new(shared_i2c.acquire_i2c());
 

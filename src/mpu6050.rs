@@ -11,6 +11,13 @@ use nalgebra::{Vector2, Vector3};
 pub type MpuSignal = Signal<CriticalSectionRawMutex, MpuData>;
 pub static MPU_SIGNAL: MpuSignal = Signal::new();
 
+#[derive(Clone, Copy, ErrorCategory)]
+#[repr(u8)]
+pub enum MpuError {
+    InitFailed,
+    ReadoutFailed,
+}
+
 #[derive(Debug)]
 pub struct MpuData {
     pub roll_pitch: Vector2<f32>,
@@ -58,6 +65,13 @@ pub async fn mpu6050_stream(
     // mpu.
 
     loop {
+        // let mpu_data = MpuData {
+        //     roll_pitch: mpu.get_acc_angles(),
+        //     temp: mpu.get_temp(),
+        //     gyro: mpu.get_gyro_deg(),
+        //     acc: mpu.get_acc().chain_err(CansatError::I2C)
+        // };
+
         let mpu_data = MpuData {
             roll_pitch: mpu.get_acc_angles().unwrap(),
             temp: mpu.get_temp().unwrap(),
@@ -69,6 +83,6 @@ pub async fn mpu6050_stream(
 
         MPU_SIGNAL.signal(mpu_data);
 
-        Timer::after_millis(25).await;
+        Timer::after_millis(100).await;
     }
 }

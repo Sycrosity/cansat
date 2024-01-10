@@ -3,7 +3,6 @@ use crate::{
     prelude::*,
 };
 
-// use alloc::format;
 use core::fmt::{self, Write};
 use esp32_hal::{i2c::I2C, peripherals::I2C0};
 use ssd1306::{
@@ -14,49 +13,112 @@ use ssd1306::{
 
 type DisplayInternals<SIZE> = Ssd1306<I2CInterface<I2CShared>, SIZE, TerminalMode>;
 
+type Result<T> = core::result::Result<T, Error<DisplayError>>;
+
+#[derive(Clone, Copy, ErrorCategory)]
+#[error_category(links(DisplayError))]
+#[repr(u8)]
+pub enum DisplayError {
+    /// Display initialisation failed
+    InitFailed,
+    /// The Display was used before initialisation
+    Uninitialised,
+    /// An error occured while attempting to write to the screen
+    WriteError,
+    /// A write location was specified outside of the screen
+    OutOfBounds,
+    /// An error with the underlying interface of the display
+    #[error("{variant}: {summary}")]
+    InterfaceError,
+    ClearError,
+}
+
+impl From<TerminalModeError> for DisplayError {
+    fn from(value: TerminalModeError) -> Self {
+        match value {
+            TerminalModeError::InterfaceError(_) => Self::InterfaceError,
+            TerminalModeError::Uninitialized => Self::Uninitialised,
+            TerminalModeError::OutOfBounds => Self::OutOfBounds,
+        }
+    }
+}
+
+impl From<core::fmt::Error> for DisplayError {
+    fn from(_value: core::fmt::Error) -> Self {
+        Self::WriteError
+    }
+}
+
 pub struct Display<SIZE> {
     display: DisplayInternals<SIZE>,
 }
 
 impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
-    pub fn new(i2c: I2CShared, display_size: SIZE) -> Self {
+    pub async fn new(i2c: I2CShared, display_size: SIZE) -> Result<Self> {
         let interface = I2CDisplayInterface::new(i2c);
 
-        let mut display =
+        let display =
             Ssd1306::new(interface, display_size, DisplayRotation::Rotate0).into_terminal_mode();
 
-        display.init().unwrap();
+        let mut display = Self { display };
 
-        display.clear().unwrap();
+        // display.display.init()?;
 
-        Self { display }
+        display.try_init().await?;
+
+        if let Err(e) = display.clear() {
+            error!("{e:?}")
+        };
+
+        Ok(display)
     }
 
-    pub fn clear(&mut self) -> Result<(), TerminalModeError> {
-        self.display.clear()
+    fn init(&mut self) -> Result<()> {
+        self.display.init().map_err(DisplayError::from)?;
+        Ok(())
     }
 
-    pub fn quick_clear(&mut self) {
+    async fn try_init(&mut self) -> Result<()> {
+        try_repeat(|| self.init(), DEFAULT_INTERVAL, DEFAULT_MAX_ELAPSED_TIME).await?;
+        debug!("Initialised Display");
+        Ok(())
+    }
+
+    pub fn clear(&mut self) -> Result<()> {
+        self.display
+            .clear()
+            .map_err(DisplayError::from)
+            .chain_err(DisplayError::ClearError)?;
+        Ok(())
+    }
+
+    pub fn quick_clear(&mut self) -> Result<()> {
         if let Err(e) = self.set_position(0, 0) {
             warn!("{e:?}");
-            self.clear();
+            self.clear()?;
         };
         if let Err(e) = self.display.write_str("") {
             warn!("{e:?}");
-            self.clear();
+            self.clear()?;
         };
+        Ok(())
     }
 
-    pub fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
-        self.display.write_str(s)
+    pub fn write_str(&mut self, s: &str) -> Result<()> {
+        self.display.write_str(s).map_err(DisplayError::from)?;
+        Ok(())
     }
 
-    pub fn write_fmt(&mut self, args: fmt::Arguments<'_>) -> Result<(), fmt::Error> {
-        self.display.write_fmt(args)
+    pub fn write_fmt(&mut self, args: fmt::Arguments<'_>) -> Result<()> {
+        self.display.write_fmt(args).map_err(DisplayError::from)?;
+        Ok(())
     }
 
-    pub fn set_position(&mut self, column: u8, row: u8) -> Result<(), TerminalModeError> {
-        self.display.set_position(column, row)
+    pub fn set_position(&mut self, column: u8, row: u8) -> Result<()> {
+        self.display
+            .set_position(column, row)
+            .map_err(DisplayError::from)?;
+        Ok(())
     }
 }
 
@@ -88,8 +150,6 @@ pub async fn display_numerical_data(
     loop {
         let mpu_data = MPU_SIGNAL.wait().await;
 
-        // Timer::after_millis(1).await;
-
         display.quick_clear();
 
         if let Err(e) = display
@@ -108,20 +168,6 @@ pub async fn display_numerical_data(
             warn!("{e:?}");
             display.clear();
         };
-
-        // display
-        //     .write_fmt(format_args!(
-        //         "temp: {:.4}c\nacc: (x,y,z)\n{:.1}, {:.1}, {:.1}\ngyro:\n{:.1},{:.1},{:.1}\nroll/pitch:\n{:.2}, {:.2}",
-        //         mpu_data.temp,
-        //         mpu_data.acc.x,
-        //         mpu_data.acc.y,
-        //         mpu_data.acc.z,
-        //         mpu_data.gyro.x,
-        //         mpu_data.gyro.y,
-        //         mpu_data.gyro.z,
-        //         mpu_data.roll_pitch.x,
-        //         mpu_data.roll_pitch.y
-        //     ))
-        // .unwrap();
     }
 }
+// farago

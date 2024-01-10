@@ -2,10 +2,13 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 #![allow(unused)]
+#![allow(clippy::unused_unit)]
 
 pub mod blink;
 pub mod display;
+pub mod errors;
 pub mod mpu6050;
+pub mod utils;
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -33,9 +36,17 @@ pub mod prelude {
         shared_bus::XtensaMutex<hal::i2c::I2C<'static, hal::peripherals::I2C0>>,
     >;
 
+    pub const DEFAULT_INTERVAL: Duration = Duration::from_millis(500);
+
+    pub const DEFAULT_MAX_ELAPSED_TIME: Duration = Duration::from_secs(5);
+
+    pub use crate::{errors::*, utils::*};
+
     pub use esp32_hal as hal;
     pub use esp_backtrace as _;
     pub use esp_println as _;
+
+    pub use embedded_error_chain::prelude::*;
 
     pub use embassy_executor::task;
     pub use esp_println::println;
@@ -46,7 +57,7 @@ pub mod prelude {
         prelude::*,
     };
 
-    pub use embassy_time::{Duration, Timer};
+    pub use embassy_time::{Duration, Instant, Ticker, Timer};
 
     pub use log::{debug, error, info, trace, warn};
 }
