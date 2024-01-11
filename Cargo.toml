@@ -36,6 +36,8 @@ embassy-net = { version = "0.3.0", features = ["log"], optional = true }
 
 mpu6050 = { version = "0.1.6", git = "https://github.com/Sycrosity/mpu6050" }
 ssd1306 = "0.8.4"
+#for the bmp280 senosr
+bme280 = { version = "0.4.4", features = ["async"], git = "https://github.com/Sycrosity/bme280-rs" }
 
 [features]
 alloc = ["dep:esp-alloc"]

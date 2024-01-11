@@ -9,25 +9,28 @@ pub mod display;
 pub mod errors;
 pub mod mpu6050;
 pub mod utils;
+pub mod bmp280;
 
 #[cfg(feature = "alloc")]
-extern crate alloc;
+pub mod alloc {
 
-#[cfg(feature = "alloc")]
-#[global_allocator]
-static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
+    extern crate alloc;
 
-#[cfg(feature = "alloc")]
-pub fn init_heap() {
-    use core::mem::MaybeUninit;
+    #[global_allocator]
+    static ALLOCATOR: esp_alloc::EspHeap = esp_alloc::EspHeap::empty();
 
-    const HEAP_SIZE: usize = 32 * 1024;
-    static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
-
-    unsafe {
-        ALLOCATOR.init(HEAP.as_mut_ptr() as *mut u8, HEAP_SIZE);
+    pub fn init_heap() {
+        use core::mem::MaybeUninit;
+    
+        const HEAP_SIZE: usize = 32 * 1024;
+        static mut HEAP: MaybeUninit<[u8; HEAP_SIZE]> = MaybeUninit::uninit();
+    
+        unsafe {
+            ALLOCATOR.init(HEAP.as_mut_ptr() as *mut u8, HEAP_SIZE);
+        }
     }
 }
+
 
 pub mod prelude {
 
