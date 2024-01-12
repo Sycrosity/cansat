@@ -26,7 +26,7 @@ use esp_println::println;
 #[main]
 async fn main(spawner: Spawner) -> ! {
     #[cfg(feature = "alloc")]
-    crate::alloc::init_heap();
+    cansat::alloc::init_heap();
 
     let peripherals = Peripherals::take();
     let system = peripherals.SYSTEM.split();

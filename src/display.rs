@@ -11,7 +11,7 @@ use ssd1306::{
     I2CDisplayInterface, Ssd1306,
 };
 
-type DisplayInternals<SIZE> = Ssd1306<I2CInterface<I2CShared>, SIZE, TerminalMode>;
+type DisplayInternals<SIZE> = Ssd1306<I2CInterface<SharedI2C>, SIZE, TerminalMode>;
 
 type Result<T> = core::result::Result<T, Error<DisplayError>>;
 
@@ -28,9 +28,11 @@ pub enum DisplayError {
     /// A write location was specified outside of the screen
     OutOfBounds,
     /// An error with the underlying interface of the display
-    #[error("{variant}: {summary}")]
     InterfaceError,
+    /// An error while clearing the display's screen
     ClearError,
+    /// An error while formatting (from [core::fmt::Error])
+    FormatError,
 }
 
 impl From<TerminalModeError> for DisplayError {
@@ -45,7 +47,7 @@ impl From<TerminalModeError> for DisplayError {
 
 impl From<core::fmt::Error> for DisplayError {
     fn from(_value: core::fmt::Error) -> Self {
-        Self::WriteError
+        Self::FormatError
     }
 }
 
@@ -54,7 +56,9 @@ pub struct Display<SIZE> {
 }
 
 impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
-    pub async fn new(i2c: I2CShared, display_size: SIZE) -> Result<Self> {
+    pub async fn new(i2c: SharedI2C, display_size: SIZE) -> Result<Self>
+// where I: Write
+    {
         let interface = I2CDisplayInterface::new(i2c);
 
         let display =
@@ -64,11 +68,9 @@ impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
 
         // display.display.init()?;
 
-        display.try_init().await?;
+        display.init()?;
 
-        if let Err(e) = display.clear() {
-            error!("{e:?}")
-        };
+        display.clear().print_error();
 
         Ok(display)
     }
@@ -78,11 +80,13 @@ impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
         Ok(())
     }
 
-    async fn try_init(&mut self) -> Result<()> {
-        try_repeat(|| self.init(), DEFAULT_INTERVAL, DEFAULT_MAX_ELAPSED_TIME).await?;
-        debug!("Initialised Display");
-        Ok(())
-    }
+    // #[deprecated]
+    // /// can't be retried!
+    // async fn try_init(&mut self) -> Result<()> {
+    //     try_repeat(|| self.init(), DEFAULT_INTERVAL, DEFAULT_MAX_ELAPSED_TIME).await?;
+    //     debug!("Initialised Display");
+    //     Ok(())
+    // }
 
     pub fn clear(&mut self) -> Result<()> {
         self.display
@@ -93,17 +97,19 @@ impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
     }
 
     pub fn quick_clear(&mut self) -> Result<()> {
-        if let Err(e) = self.set_position(0, 0) {
-            warn!("{e:?}");
-            self.clear()?;
-        };
-        if let Err(e) = self.display.write_str("") {
-            warn!("{e:?}");
-            self.clear()?;
-        };
+
+        self.set_position(0, 0).map_err(|e| {
+            self.clear().unwrap();
+            e
+        })?;
+
+        self.write_str("").map_err(|e| {
+            self.clear().unwrap();
+            e
+        })?;
+
         Ok(())
     }
-
     pub fn write_str(&mut self, s: &str) -> Result<()> {
         self.display.write_str(s).map_err(DisplayError::from)?;
         Ok(())
@@ -129,13 +135,13 @@ pub async fn screen_counter(mut display: Display<DisplaySize128x64>) {
     loop {
         Timer::after_millis(1).await;
 
-        display.quick_clear();
-        display.write_fmt(format_args!("{}", counter)).unwrap();
+        display.quick_clear().print_warn();
+        display.write_fmt(format_args!("{}", counter)).print_warn();
 
         counter = match counter.checked_add(1) {
             Some(next) => next,
             None => {
-                display.clear();
+                display.clear().print_warn();
                 1
             }
         };
@@ -150,9 +156,7 @@ pub async fn display_numerical_data(
     loop {
         let mpu_data = MPU_SIGNAL.wait().await;
 
-        display.quick_clear();
-
-        if let Err(e) = display
+        let success = display
         .write_fmt(format_args!(
             "temp: {:.4}c\nacc: (x,y,z)\n{:.1}, {:.1}, {:.1}\ngyro:\n{:.0}, {:.0}, {:.0}\nroll/pitch:\n{:.2}, {:.2}",
             mpu_data.temp,
@@ -164,10 +168,20 @@ pub async fn display_numerical_data(
             mpu_data.gyro.z,
             mpu_data.roll_pitch.x,
             mpu_data.roll_pitch.y
-        )) {
+        ));
+
+        if let Err(e) = success {
             warn!("{e:?}");
-            display.clear();
+            //try and just clear the display normally
+
+            Backoff::new(|| display.clear())
+                .with_log_level(log::Level::Trace)
+                .with_max_elapsed_time(Duration::from_millis(500))
+                .retry()
+                .await
+                .unwrap();
         };
+
+        display.quick_clear().print_warn();
     }
 }
-// farago

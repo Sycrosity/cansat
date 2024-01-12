@@ -27,7 +27,7 @@ pub struct MpuData {
 }
 
 #[task]
-pub async fn get_sensor_data(mut mpu: Mpu6050<I2CShared>) {
+pub async fn get_sensor_data(mut mpu: Mpu6050<SharedI2C>) {
     let mut delay = Delay;
 
     mpu.init(&mut delay).unwrap();
@@ -55,7 +55,7 @@ pub async fn get_sensor_data(mut mpu: Mpu6050<I2CShared>) {
 
 #[task]
 pub async fn mpu6050_stream(
-    mut mpu: Mpu6050<I2CShared>,
+    mut mpu: Mpu6050<SharedI2C>,
     //  control: &'static MpuSignal
 ) {
     let mut delay = Delay;
