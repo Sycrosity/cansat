@@ -20,8 +20,7 @@ use hal::{
 
 use embassy_executor::Spawner;
 use esp_println::println;
-
-// use esp_wifi::{initialize, EspWifiInitFor};
+use mpu6050::Mpu6050;
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -45,7 +44,8 @@ async fn main(spawner: Spawner) -> ! {
     info!("Logger is setup");
     println!("Hello world!");
 
-    // let _wifi_init = initialize(
+    // #[cfg(feature = "net")]
+    // let _wifi_init = esp32_wifi::initialize(
     //     EspWifiInitFor::Wifi,
     //     timer,
     //     Rng::new(peripherals.RNG),
@@ -68,15 +68,16 @@ async fn main(spawner: Spawner) -> ! {
         .await
         .unwrap();
 
-    let mpu = mpu6050::Mpu6050::new(shared_i2c.acquire_i2c());
+    let mpu = Mpu6050::new(shared_i2c.acquire_i2c());
 
-    // let mpu_data_signal = SIGNAL;
+    // let bme = BME280::new(shared_i2c.acquire_i2c()).map_err(|e| { error!("{e:?}") }).unwrap();
 
     spawner.spawn(blink(led.degrade())).unwrap();
     // spawner.spawn(screen_counter(display)).unwrap();
     spawner.spawn(display_numerical_data(display)).unwrap();
 
     spawner.spawn(mpu6050_stream(mpu)).unwrap();
+    // spawner.spawn(bme280_stream(bme)).unwrap();
 
     let mut ticker = Ticker::every(Duration::from_secs(10));
 

@@ -1,10 +1,7 @@
-use crate::{
-    mpu6050::{MpuSignal, MPU_SIGNAL},
-    prelude::*,
-};
+use crate::{mpu6050::MPU_SIGNAL, prelude::*};
 
 use core::fmt::{self, Write};
-use esp32_hal::{i2c::I2C, peripherals::I2C0};
+
 use ssd1306::{
     mode::{TerminalDisplaySize, TerminalMode, TerminalModeError},
     prelude::*,
@@ -66,8 +63,6 @@ impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
 
         let mut display = Self { display };
 
-        // display.display.init()?;
-
         display.init()?;
 
         display.clear().print_error();
@@ -80,14 +75,6 @@ impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
         Ok(())
     }
 
-    // #[deprecated]
-    // /// can't be retried!
-    // async fn try_init(&mut self) -> Result<()> {
-    //     try_repeat(|| self.init(), DEFAULT_INTERVAL, DEFAULT_MAX_ELAPSED_TIME).await?;
-    //     debug!("Initialised Display");
-    //     Ok(())
-    // }
-
     pub fn clear(&mut self) -> Result<()> {
         self.display
             .clear()
@@ -96,20 +83,11 @@ impl<SIZE: DisplaySize + TerminalDisplaySize> Display<SIZE> {
         Ok(())
     }
 
-    pub fn quick_clear(&mut self) -> Result<()> {
-
-        self.set_position(0, 0).map_err(|e| {
-            self.clear().unwrap();
-            e
-        })?;
-
-        self.write_str("").map_err(|e| {
-            self.clear().unwrap();
-            e
-        })?;
-
+    pub fn reset_pos(&mut self) -> Result<()> {
+        self.set_position(0, 0)?;
         Ok(())
     }
+
     pub fn write_str(&mut self, s: &str) -> Result<()> {
         self.display.write_str(s).map_err(DisplayError::from)?;
         Ok(())
@@ -135,7 +113,7 @@ pub async fn screen_counter(mut display: Display<DisplaySize128x64>) {
     loop {
         Timer::after_millis(1).await;
 
-        display.quick_clear().print_warn();
+        display.reset_pos().print_warn();
         display.write_fmt(format_args!("{}", counter)).print_warn();
 
         counter = match counter.checked_add(1) {
@@ -182,6 +160,6 @@ pub async fn display_numerical_data(
                 .unwrap();
         };
 
-        display.quick_clear().print_warn();
+        display.reset_pos().print_warn();
     }
 }

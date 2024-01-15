@@ -5,7 +5,7 @@
 #![allow(clippy::unused_unit)]
 
 pub mod blink;
-pub mod bmp280;
+pub mod bme280;
 pub mod display;
 pub mod errors;
 pub mod mpu6050;
@@ -55,13 +55,15 @@ pub mod prelude {
     pub use embassy_executor::task;
     pub use esp_println::println;
 
+    pub use embassy_sync::signal::Signal;
+
     pub use hal::{
         embassy,
         gpio::{AnyPin, Output, PushPull},
         prelude::*,
     };
 
-    pub use embassy_time::{Duration, Instant, Ticker, Timer};
+    pub use embassy_time::{Delay, Duration, Instant, Ticker, Timer};
 
     pub use log::{debug, error, info, log, trace, warn};
 }

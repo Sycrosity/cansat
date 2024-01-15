@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
 use embassy_time::Delay;
-use hal::{i2c::I2C, peripherals::I2C0};
+
 use mpu6050::*;
 use nalgebra::{Vector2, Vector3};
 
@@ -42,7 +42,7 @@ pub async fn get_sensor_data(mut mpu: Mpu6050<SharedI2C>) {
         info!("temp: {:?}c", temp);
 
         // get gyro data, scaled with sensitivity
-        let gyro: Vector3<f32> = mpu.get_gyro_deg().unwrap();
+        let gyro: Vector3<f32> = mpu.get_gyro().unwrap();
         info!("gyro: {:?}", gyro);
 
         // get accelerometer data, scaled with sensitivity
@@ -62,21 +62,12 @@ pub async fn mpu6050_stream(
 
     mpu.init(&mut delay).unwrap();
 
-    // mpu.
-
     loop {
-        // let mpu_data = MpuData {
-        //     roll_pitch: mpu.get_acc_angles(),
-        //     temp: mpu.get_temp(),
-        //     gyro: mpu.get_gyro_deg(),
-        //     acc: mpu.get_acc().chain_err(CansatError::I2C)
-        // };
-
         let mpu_data = MpuData {
-            roll_pitch: mpu.get_acc_angles().unwrap(),
-            temp: mpu.get_temp().unwrap(),
-            gyro: mpu.get_gyro_deg().unwrap(),
-            acc: mpu.get_acc().unwrap(),
+            roll_pitch: mpu.get_acc_angles().print_warn(),
+            temp: mpu.get_temp().print_warn(),
+            gyro: mpu.get_gyro().print_warn().map(|x| x.to_degrees()),
+            acc: mpu.get_acc().print_warn(),
         };
 
         trace!("{mpu_data:?}");

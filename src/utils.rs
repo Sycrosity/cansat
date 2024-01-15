@@ -32,7 +32,7 @@ where
 {
     pub fn new(op: OP) -> Self {
         Self {
-            log_level: None,
+            log_level: Some(log::Level::Trace),
             op,
             interval: Duration::from_millis(500),
             max_elapsed_time: Some(Duration::from_secs(5)),
@@ -91,59 +91,78 @@ where
     }
 }
 
-pub trait PrintErr {
-    fn print_warn(self);
-    fn print_error(self);
-    fn print_trace(self);
-    fn print_debug(self);
-    fn print_info(self);
+pub trait PrintErr<T: Default> {
+    fn print_warn(self) -> T;
+    fn print_error(self) -> T;
+    fn print_trace(self) -> T;
+    fn print_debug(self) -> T;
+    fn print_info(self) -> T;
 
-    fn print_log(self, log_level: log::Level);
+    fn print_log(self, log_level: log::Level) -> T;
 }
 
-impl<E> PrintErr for Result<(), E>
+impl<T, E> PrintErr<T> for Result<T, E>
 where
+    T: Default,
     E: core::fmt::Debug,
 {
-    fn print_warn(self) {
+    fn print_warn(self) -> T {
         match self {
             Ok(t) => t,
-            Err(e) => warn!("{e:?}"),
+            Err(e) => {
+                warn!("{e:?}");
+                T::default()
+            }
         }
     }
 
-    fn print_error(self) {
+    fn print_error(self) -> T {
         match self {
             Ok(t) => t,
-            Err(e) => error!("{e:?}"),
+            Err(e) => {
+                error!("{e:?}");
+                T::default()
+            }
         }
     }
 
-    fn print_trace(self) {
+    fn print_trace(self) -> T {
         match self {
             Ok(t) => t,
-            Err(e) => trace!("{e:?}"),
+            Err(e) => {
+                trace!("{e:?}");
+                T::default()
+            }
         }
     }
 
-    fn print_debug(self) {
+    fn print_debug(self) -> T {
         match self {
             Ok(t) => t,
-            Err(e) => debug!("{e:?}"),
+            Err(e) => {
+                debug!("{e:?}");
+                T::default()
+            }
         }
     }
 
-    fn print_info(self) {
+    fn print_info(self) -> T {
         match self {
             Ok(t) => t,
-            Err(e) => info!("{e:?}"),
+            Err(e) => {
+                info!("{e:?}");
+                T::default()
+            }
         }
     }
 
-    fn print_log(self, log_level: log::Level) {
+    fn print_log(self, log_level: log::Level) -> T {
         match self {
             Ok(t) => t,
-            Err(e) => log!(log_level, "{e:?}"),
+            Err(e) => {
+                log!(log_level, "{e:?}");
+                T::default()
+            }
         }
     }
 }
