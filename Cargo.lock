@@ -166,6 +166,7 @@ dependencies = [
  "log",
  "mpu6050",
  "nalgebra 0.32.3",
+ "qmc5883l",
  "ssd1306",
 ]
 
@@ -1198,6 +1199,14 @@ dependencies = [
  "bitflags 1.3.2",
  "memchr",
  "unicase",
+]
+
+[[package]]
+name = "qmc5883l"
+version = "0.1.0"
+source = "git+https://github.com/Sycrosity/qmc5883l#a46664b79e19471d8d561816781773ba55ee1a39"
+dependencies = [
+ "embedded-hal 1.0.0",
 ]
 
 [[package]]
