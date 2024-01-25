@@ -67,6 +67,5 @@ pub mod prelude {
 
     pub use embassy_time::{Delay, Duration, Instant, Ticker, Timer};
 
-    #[cfg(feature = "log")]
     pub use log::{debug, error, info, log, trace, warn};
 }
