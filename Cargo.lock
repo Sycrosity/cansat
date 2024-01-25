@@ -115,14 +115,14 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bitflags"
-version = "2.4.1"
+version = "2.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "327762f6e5a765692301e5bb513e0d9fef63be86bbc14528052b1cd3e6f03e07"
+checksum = "ed570934406eb16438a4e976b1b4500774099c13b8cb96eec99f620f05090ddf"
 
 [[package]]
 name = "bme280"
 version = "0.4.4"
-source = "git+https://github.com/Sycrosity/bme280-rs#96e7b0a003197c37fd4876c943bb906c7f85b010"
+source = "git+https://github.com/VersBinarii/bme280-rs#960eaa76edcda97eb5224485499f4cb569f06acd"
 dependencies = [
  "embedded-hal 1.0.0",
  "maybe-async-cfg",
@@ -145,6 +145,7 @@ name = "cansat"
 version = "0.1.0"
 dependencies = [
  "bme280",
+ "critical-section",
  "embassy-executor",
  "embassy-net",
  "embassy-sync",
@@ -152,17 +153,19 @@ dependencies = [
  "embedded-error-chain",
  "embedded-graphics",
  "embedded-hal 1.0.0",
+ "embedded-hal-async",
+ "embedded-hal-bus",
  "embedded-io",
+ "embedded-io-async",
  "embedded-svc",
  "esp-alloc",
  "esp-backtrace",
  "esp-println",
  "esp32-hal",
- "heapless 0.8.0",
+ "libm",
  "log",
  "mpu6050",
  "nalgebra 0.32.3",
- "shared-bus",
  "ssd1306",
 ]
 
@@ -312,9 +315,9 @@ dependencies = [
 
 [[package]]
 name = "embassy-executor-macros"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ab0f725ba52827eb44be22c85c52614c7402045968b26349de7f9df8421f74f"
+checksum = "ad454accf80050e9cf7a51e994132ba0e56286b31f9317b68703897c328c59b5"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -494,6 +497,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-hal-bus"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57b4e6ede84339ebdb418cd986e6320a34b017cdf99b5cc3efceec6450b06886"
+dependencies = [
+ "critical-section",
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
+]
+
+[[package]]
 name = "embedded-hal-nb"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -615,18 +629,18 @@ dependencies = [
 
 [[package]]
 name = "esp-hal-common"
-version = "0.14.1"
-source = "git+https://github.com/Sycrosity/esp-hal#402030e7425811bb5c3650bc0edbaab3c80b0184"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c468eb364cc570da74dfb8adfda9f308c34259fcd19a4c695a46554a26b7478a"
 dependencies = [
  "basic-toml",
  "bitfield",
- "bitflags 2.4.1",
+ "bitflags 2.4.2",
  "cfg-if",
  "critical-section",
  "embassy-executor",
  "embassy-futures",
  "embassy-sync",
- "embassy-time",
  "embassy-time-driver",
  "embedded-can",
  "embedded-dma",
@@ -657,7 +671,8 @@ dependencies = [
 [[package]]
 name = "esp-hal-procmacros"
 version = "0.8.0"
-source = "git+https://github.com/Sycrosity/esp-hal#402030e7425811bb5c3650bc0edbaab3c80b0184"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d4614e76646736f8adf18133d82d51f0da2b8899f38efb0a703b996a252b15e"
 dependencies = [
  "darling",
  "litrs",
@@ -691,10 +706,10 @@ dependencies = [
 
 [[package]]
 name = "esp32-hal"
-version = "0.17.0"
-source = "git+https://github.com/Sycrosity/esp-hal#402030e7425811bb5c3650bc0edbaab3c80b0184"
+version = "0.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ac3605edffa326244eac0afc66f3f6af81c84e91b4bb63a1e26ca36a3db7fd6"
 dependencies = [
- "embassy-time",
  "esp-hal-common",
 ]
 
@@ -990,9 +1005,9 @@ checksum = "c3c8dda44ff03a2f238717214da50f65d5a53b45cd213a7370424ffdb6fae815"
 
 [[package]]
 name = "minijinja"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "431d72874542d43aba1ca605870eacab134fdeb0c8fe27666ecf4b2662239df2"
+checksum = "6fe0ff215195a22884d867b547c70a0c4815cbbcc70991f281dca604b20d10ce"
 dependencies = [
  "serde",
 ]
@@ -1167,9 +1182,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.76"
+version = "1.0.78"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95fc56cda0b5c3325f5fbbd7ff9fda9e02bb00bb3dac51252d2f1bfa1cb8cc8c"
+checksum = "e2422ad645d89c99f8f3e6b88a9fdeca7fabeac836b1002371c4367c8f984aae"
 dependencies = [
  "unicode-ident",
 ]
@@ -1202,9 +1217,9 @@ checksum = "bd7a31eed1591dcbc95d92ad7161908e72f4677f8fabf2a32ca49b4237cbf211"
 
 [[package]]
 name = "regex"
-version = "1.10.2"
+version = "1.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "380b951a9c5e80ddfd6136919eef32310721aa4aacd4889a8d39124b026ab343"
+checksum = "b62dbe01f0b06f9d8dc7d49e05a0785f153b00b2c227856282f671e0318c9b15"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1214,9 +1229,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f804c7828047e88b2d32e2d7fe5a105da8ee3264f01902f796c8e067dc2483f"
+checksum = "3b7fa1134405e2ec9353fd416b17f8dacd46c473d7d3fd1cf202706a14eb792a"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -1277,17 +1292,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shared-bus"
-version = "0.4.0"
-source = "git+https://github.com/Sycrosity/shared-bus#80b86afdadb6a34361549795abd13b80f95d9022"
-dependencies = [
- "embedded-hal 1.0.0",
- "nb 1.1.0",
- "spin",
- "xtensa-lx",
-]
-
-[[package]]
 name = "simba"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1336,7 +1340,7 @@ dependencies = [
 [[package]]
 name = "ssd1306"
 version = "0.8.4"
-source = "git+https://github.com/Sycrosity/ssd1306#4dcbab0bc8f0a60bb1984ae60fbc98f7b36b827e"
+source = "git+https://github.com/Sycrosity/ssd1306#886c4c38b0a5dab6af0a8cca5499e98c2e2615fd"
 dependencies = [
  "display-interface",
  "display-interface-i2c",

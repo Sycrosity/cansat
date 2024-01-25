@@ -23,14 +23,7 @@ impl From<bme280::Error<hal::i2c::Error>> for BMEError {
     fn from(value: bme280::Error<hal::i2c::Error>) -> Self {
         match value {
             bme280::Error::CompensationFailed => Self::DataErr,
-            bme280::Error::Bus(e) => match e {
-                hal::i2c::Error::ExceedingFifo => todo!(),
-                hal::i2c::Error::AckCheckFailed => Self::Ack,
-                hal::i2c::Error::TimeOut => Self::TimeoutError,
-                hal::i2c::Error::ArbitrationLost => todo!(),
-                hal::i2c::Error::ExecIncomplete => todo!(),
-                hal::i2c::Error::CommandNrExceeded => todo!(),
-            },
+            bme280::Error::Bus(_) => Self::InterfaceError,
             // Self::InterfaceError,
             bme280::Error::InvalidData => Self::DataErr,
             bme280::Error::NoCalibrationData => Self::InitialisationError,
@@ -48,17 +41,11 @@ pub struct BME280 {
 
 impl BME280 {
     pub fn new(i2c: SharedI2C) -> Result<Self> {
-        println!("a");
-
         let mut bme280 = Self {
             bme: bme280::i2c::BME280::new_primary(i2c),
         };
 
-        info!("g");
-
         bme280.init()?;
-
-        info!("e");
 
         // bme280.try_init().await?;
 
@@ -112,7 +99,7 @@ pub async fn bme280_stream(
 ) {
     let mut delay: Delay = Delay;
 
-    bme.init().unwrap();
+    bme.init().print_warn();
 
     loop {
         let bme_data: BmeData = bme
@@ -121,6 +108,13 @@ pub async fn bme280_stream(
             .map(Into::<BmeData>::into)
             .map_err(|e| error!("{e:?}"))
             .unwrap_or_default();
+
+        // let mpu_data = MpuData {
+        //     roll_pitch: mpu.get_acc_angles().unwrap(),
+        //     temp: mpu.get_temp().unwrap(),
+        //     gyro: mpu.get_gyro().unwrap(),
+        //     acc: mpu.get_acc().unwrap(),
+        // };
 
         info!("{bme_data:?}");
 

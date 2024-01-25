@@ -33,9 +33,9 @@ pub mod alloc {
 
 pub mod prelude {
 
-    pub type SharedI2C = shared_bus::I2cProxy<
+    pub type SharedI2C = embedded_hal_bus::i2c::CriticalSectionDevice<
         'static,
-        shared_bus::XtensaMutex<hal::i2c::I2C<'static, hal::peripherals::I2C0>>,
+        hal::i2c::I2C<'static, hal::peripherals::I2C0>,
     >;
 
     pub const DEFAULT_INTERVAL: Duration = Duration::from_millis(500);
@@ -43,6 +43,8 @@ pub mod prelude {
     pub const DEFAULT_MAX_ELAPSED_TIME: Duration = Duration::from_secs(5);
 
     pub use crate::{errors::*, utils::*};
+
+    pub use critical_section::Mutex;
 
     pub use esp32_hal as hal;
     #[allow(unused)]

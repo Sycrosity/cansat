@@ -2,8 +2,11 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
+use core::cell::RefCell;
+
 use cansat::{
     blink::blink,
+    bme280::{bme280_stream, BME280},
     display::{display_numerical_data, Display},
     mpu6050::mpu6050_stream,
     prelude::*,
@@ -15,12 +18,15 @@ use hal::{
     i2c::*,
     peripherals::{Peripherals, I2C0},
     timer::TimerGroup,
+    xtensa_lx::singleton,
     IO,
 };
 
 use embassy_executor::Spawner;
 use esp_println::println;
 use mpu6050::Mpu6050;
+
+use embedded_hal_bus::i2c::CriticalSectionDevice;
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -36,10 +42,9 @@ async fn main(spawner: Spawner) -> ! {
 
     let timer_group0 = TimerGroup::new(peripherals.TIMG0, &clocks);
 
-    embassy::init(&clocks, timer_group0.timer0);
+    embassy::init(&clocks, timer_group0);
 
     // To change the log_level change the env section in .cargo/config.toml or remove it and set ESP_LOGLEVEL manually before running cargo run this requires a clean rebuild because of https://github.com/rust-lang/cargo/issues/10358
-
     esp_println::logger::init_logger_from_env();
     info!("Logger is setup");
     println!("Hello world!");
@@ -62,18 +67,21 @@ async fn main(spawner: Spawner) -> ! {
     let i2c = I2C::new(peripherals.I2C0, sda, scl, 400u32.kHz(), &clocks);
 
     //we must share the i2c bus between the two, as otherwise the functions want to "own" the i2c bus themselves
-    let shared_i2c = shared_bus::new_xtensa!(I2C<'static,I2C0> = i2c).unwrap();
+    let i2c_mutex =
+        singleton!(:Mutex<RefCell<I2C<'static,I2C0>>> = Mutex::new(RefCell::new(i2c))).unwrap();
 
-    let display = Display::new(shared_i2c.acquire_i2c(), ssd1306::size::DisplaySize128x64)
-        .await
-        .unwrap();
+    let display = Display::new(
+        CriticalSectionDevice::new(i2c_mutex),
+        ssd1306::size::DisplaySize128x64,
+    )
+    .await
+    .expect("display initialisation failed");
 
-    let mpu = Mpu6050::new(shared_i2c.acquire_i2c());
+    let mpu = Mpu6050::new(CriticalSectionDevice::new(i2c_mutex));
 
     // let bme = BME280::new(shared_i2c.acquire_i2c()).map_err(|e| { error!("{e:?}") }).unwrap();
 
     spawner.spawn(blink(led.degrade())).unwrap();
-    // spawner.spawn(screen_counter(display)).unwrap();
     spawner.spawn(display_numerical_data(display)).unwrap();
 
     spawner.spawn(mpu6050_stream(mpu)).unwrap();
