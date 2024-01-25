@@ -9,6 +9,7 @@ where
     ///An optional log level to print the error on each retry.
     ///
     /// Defaults to [None].
+    #[cfg(feature = "log")]
     log_level: Option<log::Level>,
     /// The function to be ran on each repeat
     ///
@@ -32,6 +33,7 @@ where
 {
     pub fn new(op: OP) -> Self {
         Self {
+            #[cfg(feature = "log")]
             log_level: Some(log::Level::Trace),
             op,
             interval: Duration::from_millis(500),
@@ -39,6 +41,7 @@ where
         }
     }
 
+    #[cfg(feature = "log")]
     pub fn with_log_level(mut self, log_level: impl Into<Option<log::Level>>) -> Self {
         self.set_log_level(log_level.into());
         self
@@ -54,6 +57,7 @@ where
         self
     }
 
+    #[cfg(feature = "log")]
     pub fn set_log_level(&mut self, log_level: impl Into<Option<log::Level>>) {
         self.log_level = log_level.into();
     }
