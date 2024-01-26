@@ -45,6 +45,7 @@ async fn main(spawner: Spawner) -> ! {
     embassy::init(&clocks, timer_group0);
 
     // To change the log_level change the env section in .cargo/config.toml or remove it and set ESP_LOGLEVEL manually before running cargo run this requires a clean rebuild because of https://github.com/rust-lang/cargo/issues/10358
+    #[cfg(feature = "log")]
     esp_println::logger::init_logger_from_env();
     info!("Logger is setup");
     println!("Hello world!");

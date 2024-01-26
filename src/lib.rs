@@ -49,13 +49,12 @@ pub mod prelude {
     pub use esp32_hal as hal;
     #[allow(unused)]
     pub use esp_backtrace as _;
-    #[allow(unused)]
-    pub use esp_println as _;
+
+    pub use esp_println::{print, println};
 
     pub use embedded_error_chain::prelude::*;
 
     pub use embassy_executor::task;
-    pub use esp_println::println;
 
     pub use embassy_sync::signal::Signal;
 
