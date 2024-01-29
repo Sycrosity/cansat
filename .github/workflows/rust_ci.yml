@@ -19,6 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         action:
+          - command: 
+            args: --release
           - command: build
             args: --release
           - command: fmt
@@ -28,13 +30,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Enable caching
-        uses: Swatinem/rust-cache@v2
       - name: Setup Rust
         uses: esp-rs/xtensa-toolchain@v1.5
         with:
           default: true
           buildtargets: esp32
           ldproxy: false
+      - name: Enable caching
+        uses: Swatinem/rust-cache@v2
       - name: Run command
         run: cargo ${{ matrix.action.command }} ${{ matrix.action.args }}

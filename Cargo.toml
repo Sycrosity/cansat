@@ -39,14 +39,14 @@ critical-section = "1.1.2"
 # heapless = { version = "0.8.0", default-features = false }
 
 embassy-executor = { version = "0.5.0", features = ["nightly"] }
-embassy-time = { version = "0.3.0" }
-embassy-sync = { version = "0.5.0" }
-embassy-net = { version = "0.4.0", features = ["proto-ipv4", "dns", "tcp", "medium-ethernet"], optional = true }
+embassy-time     = { version = "0.3.0" }
+embassy-sync     = { version = "0.5.0" }
+embassy-net      = { version = "0.4.0", features = ["proto-ipv4", "dns", "tcp", "medium-ethernet"], optional = true }
 
-mpu6050 = { version = "0.1.6", git = "https://github.com/Sycrosity/mpu6050" }
-ssd1306 = { version = "0.8.4", git = "https://github.com/Sycrosity/ssd1306" }
-bme280 = { version = "0.5.0" }
-qmc5883l = { version = "0.1.0" }
+mpu6050  =  { version = "0.1.6" }
+ssd1306  =  { version = "0.8.4" }
+bme280   =  { version = "0.5.0" }
+qmc5883l =  { version = "0.1.0" }
 # hmc5883-async = { version = "0.1.3" }
 
 [features]
@@ -70,6 +70,7 @@ log = [
 defmt = []
 
 [patch.crates-io]
-qmc5883l = { version = "0.1.0", git = "https://github.com/Sycrosity/qmc5883l" }
-
+qmc5883l =  { version = "0.1.0", git = "https://github.com/Sycrosity/qmc5883l" }
+ssd1306  =  { version = "0.8.4", git = "https://github.com/Sycrosity/ssd1306" }
+mpu6050  =  { version = "0.1.6", git = "https://github.com/Sycrosity/mpu6050" }
 # hmc5883-async = { version = "0.1.3", git = "https://github.com/Sycrosity/hmc5883-async" }
