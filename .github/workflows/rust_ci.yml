@@ -19,8 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         action:
-          - command: 
-            args: --release
           - command: build
             args: --release
           - command: fmt
