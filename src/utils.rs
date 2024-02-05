@@ -76,7 +76,7 @@ where
 
                 Err(e) if counter <= counter_limit => {
                     if let Some(level) = self.log_level {
-                        log!(level, "{e:?}: ({counter})")
+                        log!(level, "{e:?}: ({counter})");
                     }
 
                     counter += 1;

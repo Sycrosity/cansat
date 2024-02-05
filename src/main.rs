@@ -2,17 +2,15 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use core::cell::RefCell;
 
 use cansat::{
     blink::blink,
-    bme280::{bme280_stream, BME280},
+    // bme280::{bme280_stream, BME280},
     display::{display_numerical_data, Display},
     mpu6050::mpu6050_stream,
     prelude::*,
 };
 
-use embassy_time::Ticker;
 use hal::{
     clock::ClockControl,
     i2c::*,
@@ -22,11 +20,16 @@ use hal::{
     IO,
 };
 
-use embassy_executor::Spawner;
-use esp_println::println;
 use mpu6050::Mpu6050;
+use qmc5883l::QMC5883L;
 
 use embedded_hal_bus::i2c::CriticalSectionDevice;
+use embassy_time::Ticker;
+use embassy_executor::Spawner;
+use esp_println::println;
+use libm::atan2;
+
+use core::cell::RefCell;
 
 #[main]
 async fn main(spawner: Spawner) -> ! {
@@ -88,10 +91,40 @@ async fn main(spawner: Spawner) -> ! {
     spawner.spawn(mpu6050_stream(mpu)).unwrap();
     // spawner.spawn(bme280_stream(bme)).unwrap();
 
-    let mut ticker = Ticker::every(Duration::from_secs(10));
+    let mut ticker = Ticker::every(Duration::from_secs(1));
+
+    let mut qmc = QMC5883L::new(CriticalSectionDevice::new(i2c_mutex)).unwrap();
+
+    qmc.continuous().expect("init failed");
 
     loop {
         trace!("KeepAlive tick");
+
+        if let Ok(temp) = qmc.temp() {
+            let temp = temp.wrapping_neg() / 128;
+            info!("Temperature: {:?}", temp);
+        }
+
+        match qmc.mag() {
+            Ok((x, y, z)) => {
+                let mut heading = atan2(y as f64, x as f64) + DECLINATION_RADS;
+
+                if heading < 0.0 {
+                    heading += 2.0 * PI;
+                } else if heading > 2.0 * PI {
+                    heading -= 2.0 * PI;
+                }
+
+                let heading_degrees = heading * 180.0 / PI;
+
+                info!(
+                    "x={:.1}, y={:.1}, z={:.1}: heading={:.1} degrees",
+                    x, y, z, heading_degrees
+                );
+            }
+            Err(e) => info!("Error {:?}", e),
+        }
+
         ticker.next().await;
     }
 }

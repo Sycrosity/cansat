@@ -42,6 +42,12 @@ pub mod prelude {
 
     pub const DEFAULT_MAX_ELAPSED_TIME: Duration = Duration::from_secs(5);
 
+    // Need correct magnetic declination for your location for accurate
+    // readings. See http://www.magnetic-declination.com/
+    pub const DECLINATION_RADS: f64 = 0.94919;
+
+    pub use core::f64::consts::PI;
+
     pub use crate::{errors::*, utils::*};
 
     pub use critical_section::Mutex;
