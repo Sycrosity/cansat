@@ -6,7 +6,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-esp32-hal = { version = "0.18.0", features = ["embassy", "embassy-executor-thread", "async", "embassy-time-timg0", "bluetooth", "embedded-io"] }
+esp32-hal = { version = "0.18", features = ["embassy", "embassy-executor-thread", "async", "embassy-time-timg0", "bluetooth", "embedded-io"] }
 esp-backtrace = { version = "0.10.0", features = ["esp32", "panic-handler", "exception-handler", "print-uart"] }
 esp-println = { version = "0.8.0", features = ["esp32", "uart"] }
 
@@ -68,6 +68,9 @@ log = [
     "esp32-hal/log"
 ]
 defmt = []
+
+[profile.dev.package.esp-wifi]
+opt-level = 3
 
 [patch.crates-io]
 qmc5883l =  { version = "0.1.0", git = "https://github.com/Sycrosity/qmc5883l" }

@@ -8,7 +8,7 @@ ESP_LOGLEVEL="debug"
 rustflags = [
   "-C", "link-arg=-Tlinkall.x",
   "-C", "link-arg=-nostartfiles",
-# "-C", "link-arg=-Trom_functions.x",
+"-C", "link-arg=-Trom_functions.x",
 ]
 
 target = "xtensa-esp32-none-elf"
